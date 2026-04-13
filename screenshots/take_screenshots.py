@@ -146,31 +146,50 @@ def insert_image(doc, img_path, caption="", width=Inches(6.5)):
 def page_break(doc):
     doc.add_page_break()
 
-# ── WORD DOC 1: ERRORS ───────────────────────────────────────────────────────
-doc1 = new_doc("RPA Assignment 04 — Section 1: Error Log")
-add_title(doc1, "RPA Bot Troubleshooting — Section 1: Error Log")
-add_subtitle(doc1, "Assignment 04  |  E-Commerce Order Processing RPA Bot  |  Omais Siddiqui  |  April 2026")
+# ── SINGLE COMBINED WORD DOCUMENT ────────────────────────────────────────────
+doc1 = new_doc("RPA Assignment 04 — E-Commerce Order Processing RPA Bot")
+add_title(doc1, "E-Commerce Order Processing RPA Bot")
+add_title(doc1, "Troubleshooting & Debugging Case Study")
+add_subtitle(doc1, "RPA Course  |  Assignment 04  |  Omais Siddiqui  |  April 2026")
 
-add_h2(doc1, "Website Screenshot — Hero & Error Log Section")
-insert_image(doc1, f"{SS_DIR}/01_Hero_Banner.png", "Figure 1: Website Hero Banner — RPA Bot Troubleshooting Case Study")
-insert_image(doc1, f"{SS_DIR}/02_Section1_Errors.png", "Figure 2: Section 1 — RPA Error Log Table (5 exceptions)")
+# ── TABLE OF CONTENTS ─────────────────────────────────────────────────────────
+add_h2(doc1, "Contents")
+for item in [
+    "Section 1 — RPA Error Log: 5 Realistic Exceptions",
+    "Section 2 — Debugging Strategy & Framework",
+    "Section 3 — Bot Optimization Strategies",
+    "Section 4 — Monitoring Dashboard",
+    "Section 5 — AI-Assisted Development (Vibe Coding)",
+]:
+    add_bullet(doc1, item)
 
 page_break(doc1)
-add_h2(doc1, "5 Realistic RPA Exceptions — Descriptions")
+
+# ── SECTION 1 ─────────────────────────────────────────────────────────────────
+add_title(doc1, "Section 1 — RPA Error Log: 5 Realistic Exceptions", color=NAVY)
+add_subtitle(doc1, "Documented errors across workflow stages categorized by type, impact, and root cause")
+
+# ── SECTION 1 CONTENT ────────────────────────────────────────────────────────
+add_h2(doc1, "Website Screenshot — Hero & Error Log")
+insert_image(doc1, f"{SS_DIR}/01_Hero_Banner.png",       "Figure 1: Website Hero Banner")
+insert_image(doc1, f"{SS_DIR}/02_Section1_Errors.png",   "Figure 2: Section 1 — RPA Error Log Table")
+
+page_break(doc1)
+add_h2(doc1, "5 Realistic RPA Exceptions")
 errors = [
-    ("E-01", "SelectorNotFoundException", "System", "Order Placement", "HIGH",
+    ("E-01", "SelectorNotFoundException", "System",   "Order Placement",    "HIGH",
      "Checkout portal frontend renamed CSS selector from #btn-checkout to .submit-order-cta during a release. "
      "The bot's selector library was not updated. This blocked approximately 120 orders per hour."),
-    ("E-02", "InvalidOrderDataException", "Business", "Data Extraction", "HIGH",
+    ("E-02", "InvalidOrderDataException", "Business", "Data Extraction",    "HIGH",
      "ERP system began exporting international orders without the postal code field. "
-     "Input schema validation layer never updated, causing silent shipment failures."),
-    ("E-03", "OracleDBTimeoutException", "System", "Inventory Check", "HIGH",
+     "Input schema validation layer never updated, causing silent shipment failures downstream."),
+    ("E-03", "OracleDBTimeoutException",  "System",   "Inventory Check",    "HIGH",
      "Inventory table lacks composite index on (product_sku, warehouse_id). "
-     "Full table scans under 50+ concurrent bots caused 30s timeouts, leading to 400+ oversold units/week."),
-    ("E-04", "DuplicateOrderException", "Business", "Order Submission", "MEDIUM",
+     "Full table scans under 50+ concurrent bots caused 30s timeouts — 400+ units oversold per week."),
+    ("E-04", "DuplicateOrderException",   "Business", "Order Submission",   "MEDIUM",
      "Retry logic lacked idempotency key check. On network timeout, bot retried without verifying "
      "if original POST succeeded — creating duplicate records and double-charging customers."),
-    ("E-05", "PDFParsingFailureException", "App", "Invoice Generation", "LOW",
+    ("E-05", "PDFParsingFailureException","App",      "Invoice Generation", "LOW",
      "Vendor switched invoice template from text-layer PDF to scanned image PDF. "
      "OCR pre-processing not enabled in PDFActivityPack — parser returned null fields."),
 ]
@@ -183,37 +202,34 @@ for eid, name, etype, stage, sev, desc in errors:
         p.paragraph_format.space_after = Pt(2)
     add_para(doc1, f"Root Cause: {desc}")
 
-doc1.save(f"{WORD_DIR}/Section_1_Error_Log.docx")
-print("Saved: Section_1_Error_Log.docx")
+# ── SECTION 2 ─────────────────────────────────────────────────────────────────
+page_break(doc1)
+add_title(doc1, "Section 2 — Debugging Strategy & Framework", color=NAVY)
+add_subtitle(doc1, "Logging, monitoring, reproduction steps, retry logic, and decision flow")
 
-# ── WORD DOC 2: DEBUGGING ────────────────────────────────────────────────────
-doc2 = new_doc("RPA Assignment 04 — Section 2: Debugging Strategy")
-add_title(doc2, "Section 2 — Debugging Strategy & Framework")
-add_subtitle(doc2, "Assignment 04  |  Omais Siddiqui  |  April 2026")
+add_h2(doc1, "Website Screenshot — Debugging Strategy")
+insert_image(doc1, f"{SS_DIR}/03_Section2_Debugging.png", "Figure 3: Section 2 — Debugging Strategy & Decision Flow")
 
-add_h2(doc2, "Website Screenshot — Debugging Strategy Section")
-insert_image(doc2, f"{SS_DIR}/03_Section2_Debugging.png", "Figure 3: Section 2 — Debugging Strategy, Retry Logic & Decision Flow")
-
-page_break(doc2)
-add_h2(doc2, "1. Logging Strategy")
+page_break(doc1)
+add_h2(doc1, "1. Logging Strategy")
 for bullet in [
     "Structured levels: INFO (normal flow), WARN (recoverable anomalies), ERROR (exceptions + stack traces), FATAL (process-terminating).",
     "Every log entry includes: OrderID, BotInstanceID, UTC Timestamp, WorkflowStage, CorrelationID.",
     "Log shipping pipeline: UiPath Orchestrator → Elasticsearch → Kibana. Retention: 90 days.",
     "Screenshot on every exception — saved with OrderID-Timestamp naming convention.",
 ]:
-    add_bullet(doc2, bullet)
+    add_bullet(doc1, bullet)
 
-add_h2(doc2, "2. Monitoring & Alerting")
+add_h2(doc1, "2. Monitoring & Alerting")
 for bullet in [
     "Real-time KPI tracking: success rate, exception rate, avg processing time, queue depth — 60s refresh.",
     "PagerDuty alerts: success rate <90%, error rate >5%, queue depth >500 items, bot unresponsive >5 min.",
     "SLA violation detection: orders not processed within 4 hours trigger email to Operations Manager.",
     "Anomaly detection: unusual error spikes auto-create Jira tickets with log snippets.",
 ]:
-    add_bullet(doc2, bullet)
+    add_bullet(doc1, bullet)
 
-add_h2(doc2, "3. Error Reproduction Steps")
+add_h2(doc1, "3. Error Reproduction Steps")
 for i, step in enumerate([
     "Isolate: Extract the failing transaction from Orchestrator queue with exact input payload.",
     "Snapshot: Clone production environment state (app version, DB snapshot, selector library).",
@@ -222,53 +238,50 @@ for i, step in enumerate([
     "Confirm: Reproduce consistently at least 3× before applying any fix.",
     "Validate: Run 50 representative test transactions — zero failures required for production promotion.",
 ], 1):
-    p = doc2.add_paragraph()
+    p = doc1.add_paragraph()
     r1 = p.add_run(f"Step {i}: "); r1.font.bold = True; r1.font.size = Pt(10.5); r1.font.color.rgb = BLUE
     r2 = p.add_run(step); r2.font.size = Pt(10.5)
     p.paragraph_format.left_indent = Inches(0.2)
 
-add_h2(doc2, "4. Retry Logic & Exception Handling")
+add_h2(doc1, "4. Retry Logic & Exception Handling")
 for exc, action in [
     ("SelectorNotFoundException", "Refresh selector library from Orchestrator asset → Send alert → Rethrow."),
     ("InvalidOrderDataException", "Move to Exception Queue → Log warning → Continue next order."),
     ("TimeoutException",          "Wait 10s → Retry. If retries exhausted → Escalate to human queue."),
     ("Finally block",             "Always: take screenshot, close applications, release DB connections."),
 ]:
-    p = doc2.add_paragraph()
+    p = doc1.add_paragraph()
     r1 = p.add_run(f"• {exc}: "); r1.font.bold = True; r1.font.size = Pt(10.5); r1.font.color.rgb = RED
     r2 = p.add_run(action); r2.font.size = Pt(10.5)
     p.paragraph_format.left_indent = Inches(0.2)
 
-add_h2(doc2, "5. Debugging Decision Flow (10 Steps)")
+add_h2(doc1, "5. Debugging Decision Flow (10 Steps)")
 for i, (step, desc) in enumerate([
-    ("Error Detected",    "Bot throws exception or enters Catch block."),
-    ("Log Captured",      "Structured log entry written with full context data."),
-    ("Alert Triggered",   "PagerDuty/email notification sent based on severity."),
-    ("Classify Type",     "Determine: System, Business, or Application exception."),
-    ("Reproduce in DEV",  "Isolate transaction, snapshot environment, replay in debug."),
-    ("Apply Fix",         "Code fix, config update, or selector library update in Dev."),
-    ("Test 50 Orders",    "Run 50 representative transactions — zero failures required."),
-    ("Deploy to PROD",    "Merge to main, deploy via Orchestrator package manager."),
-    ("Monitor 24hr",      "Watch KPI dashboard actively for 24 hours post-deployment."),
-    ("Close Incident",    "Log root cause analysis, update runbook, close Jira ticket."),
+    ("Error Detected",   "Bot throws exception or enters Catch block."),
+    ("Log Captured",     "Structured log entry written with full context data."),
+    ("Alert Triggered",  "PagerDuty/email notification sent based on severity."),
+    ("Classify Type",    "Determine: System, Business, or Application exception."),
+    ("Reproduce in DEV", "Isolate transaction, snapshot environment, replay in debug."),
+    ("Apply Fix",        "Code fix, config update, or selector library update in Dev."),
+    ("Test 50 Orders",   "Run 50 representative transactions — zero failures required."),
+    ("Deploy to PROD",   "Merge to main, deploy via Orchestrator package manager."),
+    ("Monitor 24hr",     "Watch KPI dashboard actively for 24 hours post-deployment."),
+    ("Close Incident",   "Log root cause analysis, update runbook, close Jira ticket."),
 ], 1):
-    p = doc2.add_paragraph()
+    p = doc1.add_paragraph()
     r1 = p.add_run(f"{i:02d}. {step}: "); r1.font.bold = True; r1.font.size = Pt(10.5); r1.font.color.rgb = NAVY
     r2 = p.add_run(desc); r2.font.size = Pt(10.5)
     p.paragraph_format.left_indent = Inches(0.2)
 
-doc2.save(f"{WORD_DIR}/Section_2_Debugging_Strategy.docx")
-print("Saved: Section_2_Debugging_Strategy.docx")
+# ── SECTION 3 ─────────────────────────────────────────────────────────────────
+page_break(doc1)
+add_title(doc1, "Section 3 — Bot Optimization Strategies", color=NAVY)
+add_subtitle(doc1, "Performance, reliability, maintainability, scheduling & before/after comparison")
 
-# ── WORD DOC 3: OPTIMIZATION ─────────────────────────────────────────────────
-doc3 = new_doc("RPA Assignment 04 — Section 3: Optimization")
-add_title(doc3, "Section 3 — Bot Optimization Strategies")
-add_subtitle(doc3, "Assignment 04  |  Omais Siddiqui  |  April 2026")
+add_h2(doc1, "Website Screenshot — Optimization Section")
+insert_image(doc1, f"{SS_DIR}/04_Section3_Optimization.png", "Figure 4: Section 3 — Optimization Strategies")
 
-add_h2(doc3, "Website Screenshot — Optimization Section")
-insert_image(doc3, f"{SS_DIR}/04_Section3_Optimization.png", "Figure 4: Section 3 — Optimization Strategies")
-
-page_break(doc3)
+page_break(doc1)
 for section_title, color, items in [
     ("Performance Improvements", BLUE, [
         "Parallel processing: 5 concurrent bot lanes via Work Queues — 5× throughput.",
@@ -299,12 +312,11 @@ for section_title, color, items in [
         "Weekend: 3 instances with auto scale-up if queue exceeds 200 items.",
     ]),
 ]:
-    add_h2(doc3, section_title, color=color)
+    add_h2(doc1, section_title, color=color)
     for item in items:
-        add_bullet(doc3, item)
+        add_bullet(doc1, item)
 
-page_break(doc3)
-add_h2(doc3, "Before vs. After — Key Metrics")
+add_h2(doc1, "Before vs. After — Key Metrics")
 for metric, before, after in [
     ("Success Rate",      "71%",                 "97.4% (+26%)"),
     ("Processing Time",   "4.2 min/order",       "1.8 min/order (57% faster)"),
@@ -315,65 +327,68 @@ for metric, before, after in [
     ("Selector Failures", "After every deploy",   "Zero — dynamic selectors"),
     ("Config Changes",    "Full code deployment", "Zero-downtime via Orchestrator"),
 ]:
-    p = doc3.add_paragraph()
+    p = doc1.add_paragraph()
     r1 = p.add_run(f"• {metric}: "); r1.font.bold = True; r1.font.size = Pt(10.5)
     r2 = p.add_run(f"{before}  →  "); r2.font.size = Pt(10.5); r2.font.color.rgb = RED
     r3 = p.add_run(after); r3.font.size = Pt(10.5); r3.font.color.rgb = GREEN
     p.paragraph_format.left_indent = Inches(0.2)
 
-doc3.save(f"{WORD_DIR}/Section_3_Optimization.docx")
-print("Saved: Section_3_Optimization.docx")
+# ── SECTION 4 ─────────────────────────────────────────────────────────────────
+page_break(doc1)
+add_title(doc1, "Section 4 — Monitoring Dashboard", color=NAVY)
+add_subtitle(doc1, "KPIs, queue health, alerts, and bot instance status")
 
-# ── WORD DOC 4: DASHBOARD + AI ───────────────────────────────────────────────
-doc4 = new_doc("RPA Assignment 04 — Sections 4 & 5: Dashboard & AI Usage")
-add_title(doc4, "Section 4 — Monitoring Dashboard & Section 5 — AI Usage")
-add_subtitle(doc4, "Assignment 04  |  Omais Siddiqui  |  April 2026")
+add_h2(doc1, "Website Screenshot — Monitoring Dashboard")
+insert_image(doc1, f"{SS_DIR}/05_Section4_Dashboard.png", "Figure 5: Section 4 — Monitoring Dashboard Mock UI with KPIs")
 
-add_h2(doc4, "Website Screenshot — Monitoring Dashboard")
-insert_image(doc4, f"{SS_DIR}/05_Section4_Dashboard.png", "Figure 5: Section 4 — Monitoring Dashboard Mock UI with KPIs")
-
-page_break(doc4)
-add_h2(doc4, "Dashboard KPIs Reference")
+page_break(doc1)
+add_h2(doc1, "Dashboard KPIs Reference")
 for kpi, value, target, status in [
-    ("Total Orders Today",   "4,827",    "N/A — volume metric",  "Normal"),
-    ("Success Rate",         "97.4%",    "≥ 95%",                "Exceeds SLA"),
-    ("Failed Orders",        "125 (2.6%)","≤ 5%",               "Within Range"),
-    ("Retries Executed",     "218 (4.5%)","≤ 10%",              "Normal"),
-    ("Avg Processing Time",  "1.8 min",  "≤ 4 min",              "Exceeds SLA"),
-    ("Bot Uptime (30 days)", "99.2%",    "≥ 99%",                "Exceeds SLA"),
-    ("Queue Depth (New)",    "47 items", "< 200 items",          "Normal"),
-    ("Exception Queue",      "23 items", "< 50 items",           "Monitor"),
-    ("Dead Letter Queue",    "5 items",  "0 items",              "Action Required"),
+    ("Total Orders Today",   "4,827",     "N/A — volume metric", "Normal"),
+    ("Success Rate",         "97.4%",     "≥ 95%",               "Exceeds SLA"),
+    ("Failed Orders",        "125 (2.6%)","≤ 5%",                "Within Range"),
+    ("Retries Executed",     "218 (4.5%)","≤ 10%",               "Normal"),
+    ("Avg Processing Time",  "1.8 min",   "≤ 4 min",             "Exceeds SLA"),
+    ("Bot Uptime (30 days)", "99.2%",     "≥ 99%",               "Exceeds SLA"),
+    ("Queue Depth (New)",    "47 items",  "< 200 items",         "Normal"),
+    ("Exception Queue",      "23 items",  "< 50 items",          "Monitor"),
+    ("Dead Letter Queue",    "5 items",   "0 items",             "Action Required"),
 ]:
-    p = doc4.add_paragraph()
+    p = doc1.add_paragraph()
     r1 = p.add_run(f"• {kpi}: "); r1.font.bold = True; r1.font.size = Pt(10.5)
     r2 = p.add_run(f"{value} | Target: {target} | Status: {status}"); r2.font.size = Pt(10.5)
     p.paragraph_format.left_indent = Inches(0.2)
 
-page_break(doc4)
-add_h2(doc4, "Website Screenshot — AI-Assisted Development Section")
-insert_image(doc4, f"{SS_DIR}/06_Section5_AI_Usage.png", "Figure 6: Section 5 — AI-Assisted Development with Claude Code (Vibe Coding)")
+# ── SECTION 5 ─────────────────────────────────────────────────────────────────
+page_break(doc1)
+add_title(doc1, "Section 5 — AI-Assisted Development (Vibe Coding)", color=NAVY)
+add_subtitle(doc1, "How Claude Code was used to build this project")
 
-add_h2(doc4, "AI-Assisted Development: Vibe Coding with Claude Code")
-add_para(doc4,
+add_h2(doc1, "Website Screenshot — AI Usage Section")
+insert_image(doc1, f"{SS_DIR}/06_Section5_AI_Usage.png", "Figure 6: Section 5 — AI-Assisted Development with Claude Code")
+
+page_break(doc1)
+add_h2(doc1, "AI-Assisted Development: Vibe Coding with Claude Code")
+add_para(doc1,
     "Vibe coding is a modern AI-assisted development approach where the developer describes what they want "
     "in natural language, and Claude Code generates, refines, and iterates on the actual code. "
     "The developer acts as architect and reviewer — the AI handles implementation details.", 10.5)
 for title, detail in [
-    ("Prompt Engineering", "Full project requirements described in natural language → Claude structured architecture, layout, and data models."),
-    ("UI/UX Generation",   "Design specs like 'enterprise-style, navy/gold color scheme' became actual CSS gradients and grid systems."),
-    ("Domain Synthesis",   "RPA error scenarios with realistic names and root causes synthesized from domain context."),
+    ("Prompt Engineering",  "Full project requirements described in natural language → Claude structured architecture, layout, and data models."),
+    ("UI/UX Generation",    "Design specs like 'enterprise-style, navy/gold color scheme' became actual CSS gradients and grid systems."),
+    ("Domain Synthesis",    "RPA error scenarios with realistic names and root causes synthesized from domain context."),
     ("Iterative Refinement","Prompt → generate → review → refine loop. The decision flow evolved from a list to a visual step flow."),
     ("Full Stack Generation","Generated complete HTML/CSS/JS website, GitHub repository setup, and video script — all through an AI-assisted development workflow."),
     ("Consistent Mock Data","Dashboard KPIs internally consistent; before/after metrics logically aligned with optimizations."),
 ]:
-    p = doc4.add_paragraph()
+    p = doc1.add_paragraph()
     r1 = p.add_run(f"• {title}: "); r1.font.bold = True; r1.font.size = Pt(10.5)
     r2 = p.add_run(detail); r2.font.size = Pt(10.5)
     p.paragraph_format.left_indent = Inches(0.2)
     p.paragraph_format.space_after = Pt(4)
 
-doc4.save(f"{WORD_DIR}/Sections_4_5_Dashboard_AI.docx")
-print("Saved: Sections_4_5_Dashboard_AI.docx")
-
-print("\n✅ All Word documents regenerated with screenshots.")
+# ── SAVE SINGLE DOCUMENT ──────────────────────────────────────────────────────
+out_path = f"{WORD_DIR}/Assignment_04_RPA_Complete.docx"
+doc1.save(out_path)
+print(f"Saved: {out_path}")
+print("\n✅ Single Word document generated with all sections and screenshots.")
