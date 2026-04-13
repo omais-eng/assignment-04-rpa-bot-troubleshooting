@@ -1,0 +1,201 @@
+===============================================================
+ VIDEO SCRIPT — RPA Assignment 04
+ E-Commerce Order Processing RPA Bot: Troubleshooting & Debugging
+ Student: Omais Siddiqui | April 2026
+ Estimated Duration: 3–5 Minutes
+===============================================================
+
+--- INTRO (0:00 – 0:25) ---
+
+[ON SCREEN: Hero banner of the website]
+
+"Hello, my name is Omais Siddiqui, and in this video I'll be walking
+through my Assignment 04 for the RPA course — a complete case study
+on troubleshooting and debugging an E-Commerce Order Processing RPA Bot
+built on UiPath.
+
+I've built a full single-page professional website that covers five areas:
+real RPA errors, a debugging strategy, optimization improvements, a
+monitoring dashboard mockup, and how I used AI to build this project.
+
+Let's dive in."
+
+--- SECTION 1: ERRORS (0:25 – 1:35) ---
+
+[ON SCREEN: Scroll to the Errors Table — Section 1]
+
+"Starting with the errors section. I've documented five realistic RPA
+exceptions that a bot like this would actually encounter in production.
+
+The first is a SelectorNotFoundException — a System Exception — that
+occurs during Order Placement. The root cause is that the checkout
+portal's frontend team renamed the CSS selector during a deployment,
+and the bot's selector library became stale. This blocks 120 orders
+per hour and is classified as HIGH severity.
+
+The second is an InvalidOrderDataException — a Business Exception —
+where the ERP feed begins exporting international orders with missing
+ZIP codes. The bot had no input schema validation, so these orders
+would silently fail downstream in the shipping module.
+
+Error three is an OracleDBTimeoutException — a System Exception —
+during the Inventory Check stage. The inventory table lacked a
+composite index on product_sku and warehouse_id. Under peak load with
+50 concurrent bot instances, full table scans were timing out at 30
+seconds. This led to overselling 400+ units per week.
+
+The fourth error is a DuplicateOrderException — a Business Exception.
+The retry logic lacked idempotency keys, so when a network timeout
+occurred mid-POST, the bot would retry without checking if the original
+request had already succeeded — charging customers twice.
+
+And finally, Error five is a PDFParsingFailureException — an
+Application Exception — in the Invoice Generation stage. The vendor
+switched from text-layer PDFs to scanned image PDFs. Without OCR
+enabled, the parser returned null fields, requiring 1.5 hours of
+manual re-generation daily.
+
+Three system exceptions, two business exceptions, one application
+exception — a realistic mix of what RPA teams face in production."
+
+--- SECTION 2: DEBUGGING (1:35 – 2:50) ---
+
+[ON SCREEN: Scroll to Debugging Strategy — Section 2]
+
+"The debugging strategy section covers how a team would systematically
+identify, reproduce, and resolve these errors.
+
+The logging strategy uses four structured levels — INFO, WARN, ERROR,
+and FATAL — and every log entry includes the OrderID, BotInstanceID,
+UTC timestamp, workflow stage, and a CorrelationID for end-to-end
+tracing. Exceptions trigger a screenshot automatically.
+
+Monitoring runs through UiPath Orchestrator piped to Elasticsearch and
+Kibana. PagerDuty alerts fire if success rate drops below 90%, error
+rate exceeds 5%, or a bot becomes unresponsive for more than 5 minutes.
+
+For error reproduction, the process is: isolate the failing transaction
+from the queue, snapshot the environment state, replay in debug mode,
+walk through with UiPath's Step Into tool, reproduce consistently three
+times, then validate the fix on 50 representative test orders before
+promoting to production.
+
+The retry logic uses a RetryScope with three retries and a five-second
+exponential backoff. Critically, an idempotency key check happens before
+any order submission — if the order was already processed, it skips.
+Each catch block handles its specific exception type: selector failures
+refresh the selector library, invalid data moves to an exception queue,
+timeouts retry then escalate to human if exhausted.
+
+The decision flow you can see at the bottom walks through ten steps:
+Error Detected → Log → Alert → Classify → Reproduce → Fix → Test →
+Deploy → Monitor → Close. System exceptions auto-retry then escalate
+to DevOps. Business exceptions go to a human review queue. Application
+exceptions activate fallback processors."
+
+--- SECTION 3: OPTIMIZATION (2:50 – 3:45) ---
+
+[ON SCREEN: Scroll to Optimization — Section 3]
+
+"The optimization section covers four areas.
+
+For performance: parallel processing with five concurrent bot lanes,
+database indexing that reduces query time from 30 seconds to under
+200 milliseconds, lazy UI loading that cuts wait time by 40%, and
+batch API calls grouping inventory checks in sets of 50.
+
+For reliability: idempotency keys eliminate all duplicate orders,
+dynamic anchor-based selectors survive frontend deployments, strict
+JSON schema validation on ERP feeds catches bad data before processing
+begins, and a circuit breaker pattern pauses the bot if DB error rates
+spike.
+
+For maintainability: a centralized selector library in Orchestrator
+assets, modular .xaml workflows with clean inputs and outputs, and
+all configuration — batch sizes, timeouts, retries — stored as
+Orchestrator assets requiring zero code deployments to change.
+
+The scheduling strategy runs five bot instances during peak hours
+8AM to 6PM, drops to two during off-peak, reserves 2AM to 4AM for
+maintenance windows, and includes a VIP priority queue with a 15-minute
+SLA guarantee.
+
+The before/after comparison tells the real story: success rate went
+from 71% to 97.4%. Processing time dropped from 4.2 minutes to 1.8
+minutes — a 57% improvement. Duplicate orders dropped to zero.
+Throughput increased five times from 120 to 600 orders per hour.
+And manual overhead fell by 96%."
+
+--- SECTION 4: DASHBOARD (3:45 – 4:15) ---
+
+[ON SCREEN: Scroll to Monitoring Dashboard — Section 4]
+
+"The monitoring dashboard mock-up shows what a real Orchestrator
+dashboard would look like post-optimization.
+
+The six KPI cards display: 4,827 total orders today, 97.4% success
+rate, 125 failures, 218 retries, 1.8 minute average processing time,
+and 99.2% bot uptime over 30 days.
+
+The queue health section shows four queues: the New Orders queue at
+47 items clearing in 5 minutes, an Exception queue of 23 items with
+7 approaching SLA deadlines, a VIP priority queue with 8 items, and
+a Dead Letter queue with 5 items needing manual investigation.
+
+The alerts panel shows one clear indicator, a medium warning for the
+exception queue backlog, an informational alert for tonight's
+maintenance window, and one critical alert for five unresolvable orders
+with an undocumented payment gateway error."
+
+--- SECTION 5: AI USAGE (4:15 – 4:55) ---
+
+[ON SCREEN: Scroll to AI Usage — Section 5]
+
+"Finally, let me explain how I built this using AI-assisted vibe coding
+with Claude Code.
+
+Vibe coding means you describe what you want in natural language, and
+the AI generates the implementation. I'm the architect — Claude is the
+builder.
+
+I prompted Claude Code with the full assignment requirements in plain
+English. It generated the entire HTML, CSS, and JavaScript from those
+descriptions. Design specifications like 'enterprise-style, navy and
+gold color scheme, card-based layout' became actual CSS gradient
+definitions and grid systems.
+
+The RPA error scenarios were synthesized by giving Claude the domain
+context — it generated technically accurate UiPath exceptions, root
+causes, and business impacts by combining its knowledge of RPA platforms
+with e-commerce workflows.
+
+The process was iterative: prompt, review, refine. The debugging
+decision flow started as a bullet list. I prompted 'make it visual as
+a horizontal step flow' — and Claude restructured it immediately.
+
+Claude Code also generated the PowerPoint slides, the Word documents,
+the folder structure setup, and this video script — all from
+conversational prompts.
+
+The key insight is that AI doesn't replace the developer's knowledge —
+it amplifies it. I still needed to know what RPA errors to document,
+what optimization strategies matter, and what a real dashboard should
+show. The AI turned that knowledge into a professional deliverable
+in hours instead of days."
+
+--- CLOSING (4:55 – 5:00) ---
+
+"Thank you for watching. All project files are available in the
+Assignment_04_RPA folder including the full source code, PowerPoint,
+Word documents, and GitHub repository link."
+
+[END]
+
+===============================================================
+TOTAL ESTIMATED DURATION: ~4 minutes 50 seconds
+Recording tips:
+- Speak at a measured pace (~130 words/minute)
+- Use screen recording software (OBS or QuickTime)
+- Keep browser at 80% zoom to show full sections
+- Pause briefly at each section header before speaking
+===============================================================
