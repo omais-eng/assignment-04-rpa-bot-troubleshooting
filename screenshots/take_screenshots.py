@@ -364,7 +364,7 @@ for title, detail in [
     ("UI/UX Generation",   "Design specs like 'enterprise-style, navy/gold color scheme' became actual CSS gradients and grid systems."),
     ("Domain Synthesis",   "RPA error scenarios with realistic names and root causes synthesized from domain context."),
     ("Iterative Refinement","Prompt → generate → review → refine loop. The decision flow evolved from a list to a visual step flow."),
-    ("Full Stack Generation","HTML/CSS/JS, Python PPT/Word scripts, GitHub setup, video script — all from conversational prompts."),
+    ("Full Stack Generation","Generated complete HTML/CSS/JS website, GitHub repository setup, and video script — all through an AI-assisted development workflow."),
     ("Consistent Mock Data","Dashboard KPIs internally consistent; before/after metrics logically aligned with optimizations."),
 ]:
     p = doc4.add_paragraph()
