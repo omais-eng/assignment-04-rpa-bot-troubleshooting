@@ -5,6 +5,12 @@
 **Date:** April 2026
 **Platform:** UiPath + Orchestrator
 
+## 🌐 Live Website
+
+**[https://omais-eng.github.io/assignment-04-rpa-bot-troubleshooting/](https://omais-eng.github.io/assignment-04-rpa-bot-troubleshooting/)**
+
+Open the live interactive website directly in your browser — no installation needed.
+
 ## Overview
 
 A comprehensive case study on troubleshooting, debugging, and optimizing an E-Commerce Order Processing RPA Bot.

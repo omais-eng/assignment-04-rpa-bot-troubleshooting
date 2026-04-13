@@ -1,0 +1,9 @@
+GitHub Repository:
+https://github.com/omais-eng/assignment-04-rpa-bot-troubleshooting
+
+Local Website File:
+file:///Users/omaissaeedsiddiqui/Desktop/Assignment_04_RPA/code/index.html
+
+Student: Omais Siddiqui
+Assignment: RPA Course — Assignment 04
+Date: April 2026
