@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RPA Bot Troubleshooting – E-Commerce Order Processing</title>
+  <style>
+    :root {
+      --primary: #1a3a5c;
+      --accent:  #2563eb;
+      --gold:    #f59e0b;
+      --green:   #10b981;
+      --red:     #ef4444;
+      --orange:  #f97316;
+      --bg:      #f0f4f8;
+      --card:    #ffffff;
+      --text:    #1e293b;
+      --muted:   #64748b;
+      --border:  #e2e8f0;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+
+    /* ── NAV ── */
+    nav {
+      background: linear-gradient(135deg, var(--primary) 0%, #0f2540 100%);
+      color: #fff;
+      padding: 0 2rem;
+      position: sticky; top: 0; z-index: 100;
+      box-shadow: 0 2px 12px rgba(0,0,0,.3);
+    }
+    .nav-inner { max-width: 1300px; margin: auto; display: flex; align-items: center; justify-content: space-between; height: 60px; }
+    .nav-logo { font-size: 1.1rem; font-weight: 700; letter-spacing: .5px; }
+    .nav-logo span { color: var(--gold); }
+    .nav-links { display: flex; gap: 1.5rem; list-style: none; }
+    .nav-links a { color: #cbd5e1; text-decoration: none; font-size: .85rem; font-weight: 500; transition: color .2s; }
+    .nav-links a:hover { color: var(--gold); }
+
+    /* ── HERO ── */
+    .hero {
+      background: linear-gradient(135deg, var(--primary) 0%, #1e4976 60%, #0f2540 100%);
+      color: #fff; padding: 5rem 2rem 4rem; text-align: center;
+    }
+    .hero-badge { display: inline-block; background: var(--gold); color: var(--primary); font-size: .75rem; font-weight: 700; padding: .25rem .9rem; border-radius: 999px; letter-spacing: 1px; margin-bottom: 1.2rem; text-transform: uppercase; }
+    .hero h1 { font-size: clamp(1.8rem, 4vw, 3rem); font-weight: 800; line-height: 1.2; max-width: 900px; margin: 0 auto .8rem; }
+    .hero h1 span { color: var(--gold); }
+    .hero p { font-size: 1.05rem; color: #94a3b8; max-width: 700px; margin: 0 auto 2rem; }
+    .hero-meta { display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap; }
+    .hero-meta .m { background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.15); border-radius: 8px; padding: .5rem 1.2rem; font-size: .82rem; color: #e2e8f0; }
+
+    /* ── LAYOUT ── */
+    .container { max-width: 1300px; margin: auto; padding: 3rem 2rem; }
+    .section-title { display: flex; align-items: center; gap: .75rem; margin-bottom: 1.8rem; }
+    .section-title .icon { background: var(--accent); color: #fff; border-radius: 8px; padding: .45rem .6rem; font-size: 1.1rem; }
+    .section-title h2 { font-size: 1.5rem; font-weight: 700; color: var(--primary); }
+    .section-title p { font-size: .88rem; color: var(--muted); margin-top: .15rem; }
+
+    /* ── CARDS ── */
+    .card { background: var(--card); border-radius: 14px; box-shadow: 0 2px 12px rgba(0,0,0,.07); padding: 1.6rem; }
+    .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.4rem; }
+    .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.2rem; }
+    .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1.1rem; }
+
+    /* ── TABLE ── */
+    .table-wrap { overflow-x: auto; border-radius: 14px; box-shadow: 0 2px 12px rgba(0,0,0,.07); }
+    table { width: 100%; border-collapse: collapse; background: var(--card); font-size: .875rem; }
+    thead tr { background: linear-gradient(90deg, var(--primary), #1e4976); color: #fff; }
+    thead th { padding: 1rem 1.1rem; text-align: left; font-weight: 600; white-space: nowrap; }
+    tbody tr { border-bottom: 1px solid var(--border); transition: background .15s; }
+    tbody tr:hover { background: #f8fafc; }
+    tbody td { padding: .85rem 1.1rem; vertical-align: top; }
+    .badge { display: inline-block; padding: .25rem .7rem; border-radius: 6px; font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; }
+    .badge-sys   { background: #fee2e2; color: #b91c1c; }
+    .badge-biz   { background: #fef3c7; color: #92400e; }
+    .badge-app   { background: #dbeafe; color: #1e40af; }
+    .badge-high  { background: #fee2e2; color: #b91c1c; }
+    .badge-med   { background: #fef3c7; color: #92400e; }
+    .badge-low   { background: #d1fae5; color: #065f46; }
+
+    /* ── KPI CARDS ── */
+    .kpi { border-radius: 14px; padding: 1.4rem 1.2rem; display: flex; flex-direction: column; gap: .4rem; position: relative; overflow: hidden; }
+    .kpi::before { content:''; position:absolute; top:-20px; right:-20px; width:80px; height:80px; border-radius: 50%; opacity:.12; }
+    .kpi.green  { background: linear-gradient(135deg, #065f46, #10b981); color:#fff; }
+    .kpi.green::before  { background:#a7f3d0; }
+    .kpi.blue   { background: linear-gradient(135deg, #1e3a8a, #2563eb); color:#fff; }
+    .kpi.blue::before   { background:#bfdbfe; }
+    .kpi.red    { background: linear-gradient(135deg, #7f1d1d, #ef4444); color:#fff; }
+    .kpi.red::before    { background:#fecaca; }
+    .kpi.orange { background: linear-gradient(135deg, #7c2d12, #f97316); color:#fff; }
+    .kpi.orange::before { background:#fed7aa; }
+    .kpi.purple { background: linear-gradient(135deg, #3b0764, #9333ea); color:#fff; }
+    .kpi.purple::before { background:#e9d5ff; }
+    .kpi.teal   { background: linear-gradient(135deg, #134e4a, #14b8a6); color:#fff; }
+    .kpi.teal::before   { background:#99f6e4; }
+    .kpi-label  { font-size: .78rem; font-weight: 600; opacity: .85; text-transform: uppercase; letter-spacing: .6px; }
+    .kpi-value  { font-size: 2rem; font-weight: 800; line-height: 1; }
+    .kpi-sub    { font-size: .8rem; opacity: .75; }
+    .kpi-trend  { font-size: .78rem; font-weight: 700; margin-top: .3rem; }
+    .trend-up   { color: #a7f3d0; }
+    .trend-dn   { color: #fca5a5; }
+
+    /* ── PROGRESS BARS ── */
+    .prog-bar { background: var(--border); border-radius: 999px; height: 8px; margin-top: .35rem; overflow: hidden; }
+    .prog-fill { height: 100%; border-radius: 999px; transition: width .6s; }
+
+    /* ── ALERT LIST ── */
+    .alert-item { display: flex; align-items: flex-start; gap: .8rem; padding: .85rem 1rem; border-radius: 10px; margin-bottom: .6rem; }
+    .alert-crit { background: #fee2e2; border-left: 4px solid var(--red); }
+    .alert-warn { background: #fef3c7; border-left: 4px solid var(--gold); }
+    .alert-info { background: #dbeafe; border-left: 4px solid var(--accent); }
+    .alert-ok   { background: #d1fae5; border-left: 4px solid var(--green); }
+    .alert-dot  { width: 10px; height: 10px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+    .dot-red    { background: var(--red); }
+    .dot-yellow { background: var(--gold); }
+    .dot-blue   { background: var(--accent); }
+    .dot-green  { background: var(--green); }
+    .alert-text { font-size: .85rem; }
+    .alert-text strong { display: block; }
+
+    /* ── TIMELINE ── */
+    .timeline { position: relative; padding-left: 2rem; }
+    .timeline::before { content:''; position:absolute; left:9px; top:0; bottom:0; width:2px; background:var(--border); }
+    .tl-item { position: relative; margin-bottom: 1.4rem; }
+    .tl-dot { position:absolute; left:-1.9rem; top:4px; width:18px; height:18px; border-radius:50%; border:3px solid #fff; box-shadow:0 0 0 2px var(--accent); background:var(--accent); }
+    .tl-dot.red    { background:var(--red);   box-shadow:0 0 0 2px var(--red); }
+    .tl-dot.green  { background:var(--green); box-shadow:0 0 0 2px var(--green); }
+    .tl-dot.gold   { background:var(--gold);  box-shadow:0 0 0 2px var(--gold); }
+    .tl-title { font-size: .92rem; font-weight: 700; color: var(--primary); }
+    .tl-desc  { font-size: .83rem; color: var(--muted); margin-top: .2rem; }
+
+    /* ── COMPARE TABLE ── */
+    .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .compare-col { border-radius: 12px; padding: 1.2rem; }
+    .compare-before { background: #fff5f5; border: 1px solid #fecaca; }
+    .compare-after  { background: #f0fdf4; border: 1px solid #bbf7d0; }
+    .compare-col h3 { font-size: .9rem; font-weight: 700; margin-bottom: .8rem; display: flex; align-items: center; gap: .4rem; }
+    .compare-col ul { list-style: none; font-size: .83rem; display: flex; flex-direction: column; gap: .5rem; }
+    .compare-col li::before { margin-right: .4rem; }
+    .compare-before li::before { content: '✗'; color: var(--red); }
+    .compare-after  li::before { content: '✓'; color: var(--green); }
+
+    /* ── STEP FLOW ── */
+    .flow { display: flex; flex-wrap: wrap; gap: 0; align-items: center; }
+    .flow-step { background: var(--primary); color: #fff; border-radius: 10px; padding: .6rem 1rem; font-size: .8rem; font-weight: 600; text-align: center; min-width: 120px; }
+    .flow-arrow { color: var(--accent); font-size: 1.3rem; font-weight: 700; padding: 0 .3rem; }
+
+    /* ── CODE BLOCK ── */
+    .code-block { background: #0f172a; color: #e2e8f0; border-radius: 10px; padding: 1.2rem 1.4rem; font-family: 'Courier New', monospace; font-size: .82rem; overflow-x: auto; line-height: 1.7; }
+    .code-block .k  { color: #60a5fa; }
+    .code-block .s  { color: #a5f3fc; }
+    .code-block .c  { color: #64748b; font-style: italic; }
+    .code-block .v  { color: #fbbf24; }
+
+    /* ── OPTIMIZATION CARDS ── */
+    .opt-card { border-radius: 12px; padding: 1.3rem; border-left: 4px solid; }
+    .opt-perf  { border-color: var(--accent); background: #eff6ff; }
+    .opt-rel   { border-color: var(--green);  background: #f0fdf4; }
+    .opt-main  { border-color: var(--gold);   background: #fffbeb; }
+    .opt-sched { border-color: #9333ea;        background: #faf5ff; }
+    .opt-card h3 { font-size: .95rem; font-weight: 700; margin-bottom: .6rem; display: flex; align-items: center; gap: .5rem; }
+    .opt-card ul { font-size: .83rem; color: var(--text); padding-left: 1.2rem; display: flex; flex-direction: column; gap: .4rem; }
+
+    /* ── AI SECTION ── */
+    .ai-feature { background: linear-gradient(135deg, #eff6ff, #f0fdf4); border: 1px solid #bfdbfe; border-radius: 12px; padding: 1.2rem; }
+    .ai-feature h3 { font-size: .92rem; font-weight: 700; color: var(--primary); margin-bottom: .5rem; display: flex; align-items: center; gap: .4rem; }
+    .ai-feature p  { font-size: .83rem; color: var(--muted); }
+
+    /* ── FOOTER ── */
+    footer { background: var(--primary); color: #94a3b8; text-align: center; padding: 1.8rem 1rem; font-size: .82rem; }
+    footer strong { color: var(--gold); }
+
+    /* ── SECTION BG ── */
+    .section-alt { background: #fff; }
+    .divider { height: 4px; background: linear-gradient(90deg, var(--primary), var(--accent), var(--gold)); }
+
+    @media(max-width:640px){
+      .compare{ grid-template-columns:1fr; }
+      .flow{ flex-direction:column; align-items:flex-start; }
+      .flow-arrow{ transform: rotate(90deg); }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══ NAV ══ -->
+<nav>
+  <div class="nav-inner">
+    <div class="nav-logo">⚙️ <span>RPA</span>Bot Diagnostics</div>
+    <ul class="nav-links">
+      <li><a href="#errors">Errors</a></li>
+      <li><a href="#debugging">Debugging</a></li>
+      <li><a href="#optimization">Optimization</a></li>
+      <li><a href="#dashboard">Dashboard</a></li>
+      <li><a href="#ai">AI Usage</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- ══ HERO ══ -->
+<div class="hero">
+  <div class="hero-badge">RPA Course · Assignment 04</div>
+  <h1>E-Commerce Order Processing<br><span>RPA Bot — Troubleshooting &amp; Debugging</span></h1>
+  <p>A comprehensive case study on diagnosing, debugging, and optimizing a UiPath RPA bot responsible for end-to-end order processing in a mid-scale e-commerce environment.</p>
+  <div class="hero-meta">
+    <div class="m">👤 Student: Omais Siddiqui</div>
+    <div class="m">📅 Date: April 2026</div>
+    <div class="m">🤖 Platform: UiPath + Orchestrator</div>
+    <div class="m">🛒 Scope: Order Processing Pipeline</div>
+  </div>
+</div>
+<div class="divider"></div>
+
+<!-- ══ SECTION 1 — ERRORS ══ -->
+<section id="errors" style="padding: 3rem 0;">
+  <div class="container">
+    <div class="section-title">
+      <div class="icon">⚠️</div>
+      <div>
+        <h2>Section 1 — RPA Error Log: 5 Realistic Exceptions</h2>
+        <p>Documented errors across workflow stages categorized by type, impact, and root cause</p>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Error Name</th>
+            <th>Error Type</th>
+            <th>Workflow Stage</th>
+            <th>Business Impact</th>
+            <th>Root Cause</th>
+            <th>Severity</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>E-01</strong></td>
+            <td>
+              <strong>SelectorNotFoundException</strong><br>
+              <span style="font-size:.78rem;color:var(--muted)">UI element not found in checkout portal</span>
+            </td>
+            <td><span class="badge badge-sys">System</span></td>
+            <td>Order Placement<br><em style="font-size:.78rem;color:var(--muted)">(Cart → Checkout)</em></td>
+            <td>Bot fails to click "Place Order" button; order never submitted. ~120 orders/hr blocked.</td>
+            <td>Checkout portal updated its DOM structure during a frontend release. CSS selector targeting <code>#btn-checkout</code> became stale after the element was renamed to <code>.submit-order-cta</code>.</td>
+            <td><span class="badge badge-high">HIGH</span></td>
+          </tr>
+          <tr>
+            <td><strong>E-02</strong></td>
+            <td>
+              <strong>InvalidOrderDataException</strong><br>
+              <span style="font-size:.78rem;color:var(--muted)">Malformed shipping address from ERP feed</span>
+            </td>
+            <td><span class="badge badge-biz">Business</span></td>
+            <td>Data Extraction<br><em style="font-size:.78rem;color:var(--muted)">(ERP → RPA)</em></td>
+            <td>Orders with missing ZIP codes skip validation, causing failed shipments and customer complaints.</td>
+            <td>ERP system began exporting addresses without the postal code field when international orders had a custom region code. Data contract was never updated in the bot's input schema validation layer.</td>
+            <td><span class="badge badge-high">HIGH</span></td>
+          </tr>
+          <tr>
+            <td><strong>E-03</strong></td>
+            <td>
+              <strong>OracleDBTimeoutException</strong><br>
+              <span style="font-size:.78rem;color:var(--muted)">Database query exceeds 30-second limit</span>
+            </td>
+            <td><span class="badge badge-sys">System</span></td>
+            <td>Inventory Check<br><em style="font-size:.78rem;color:var(--muted)">(Stock Validation)</em></td>
+            <td>Bot abandons inventory check; orders proceed without stock confirmation causing overselling of 400+ units per week.</td>
+            <td>Inventory table lacks an index on <code>product_sku</code> and <code>warehouse_id</code>. Under high concurrency (&gt;50 parallel bots), full table scans cause query timeouts. Peak hours (9–11 AM) most affected.</td>
+            <td><span class="badge badge-high">HIGH</span></td>
+          </tr>
+          <tr>
+            <td><strong>E-04</strong></td>
+            <td>
+              <strong>DuplicateOrderException</strong><br>
+              <span style="font-size:.78rem;color:var(--muted)">Same order ID submitted twice</span>
+            </td>
+            <td><span class="badge badge-biz">Business</span></td>
+            <td>Order Submission<br><em style="font-size:.78rem;color:var(--muted)">(Idempotency Check)</em></td>
+            <td>Customers charged twice; finance reconciliation requires 2–3 hours of manual correction per incident.</td>
+            <td>Retry logic on the bot lacked an idempotency key check. When a network timeout occurred during order POST, the bot retried without verifying whether the original request succeeded, creating duplicate records.</td>
+            <td><span class="badge badge-med">MEDIUM</span></td>
+          </tr>
+          <tr>
+            <td><strong>E-05</strong></td>
+            <td>
+              <strong>PDFParsingFailureException</strong><br>
+              <span style="font-size:.78rem;color:var(--muted)">Invoice PDF extraction returns null fields</span>
+            </td>
+            <td><span class="badge badge-app">Application</span></td>
+            <td>Invoice Generation<br><em style="font-size:.78rem;color:var(--muted)">(Post-Order)</em></td>
+            <td>Invoices missing line-item totals; 15% of daily invoices require manual re-generation, adding 1.5 hr/day overhead.</td>
+            <td>Vendor switched invoice template from a text-layer PDF to a scanned image PDF. The bot's PDFActivityPack parser cannot extract text from rasterized images without OCR pre-processing enabled.</td>
+            <td><span class="badge badge-low">LOW</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Error summary cards -->
+    <div class="grid-4" style="margin-top:1.5rem;">
+      <div class="card" style="border-top:4px solid var(--red);">
+        <div style="font-size:.78rem;color:var(--muted);font-weight:600;text-transform:uppercase;">System Exceptions</div>
+        <div style="font-size:2rem;font-weight:800;color:var(--red);">2</div>
+        <div style="font-size:.82rem;color:var(--muted);">E-01, E-03 — Infrastructure & UI</div>
+      </div>
+      <div class="card" style="border-top:4px solid var(--gold);">
+        <div style="font-size:.78rem;color:var(--muted);font-weight:600;text-transform:uppercase;">Business Exceptions</div>
+        <div style="font-size:2rem;font-weight:800;color:var(--gold);">2</div>
+        <div style="font-size:.82rem;color:var(--muted);">E-02, E-04 — Data &amp; Logic</div>
+      </div>
+      <div class="card" style="border-top:4px solid var(--accent);">
+        <div style="font-size:.78rem;color:var(--muted);font-weight:600;text-transform:uppercase;">Application Exceptions</div>
+        <div style="font-size:2rem;font-weight:800;color:var(--accent);">1</div>
+        <div style="font-size:.82rem;color:var(--muted);">E-05 — PDF/OCR layer</div>
+      </div>
+      <div class="card" style="border-top:4px solid #9333ea;">
+        <div style="font-size:.78rem;color:var(--muted);font-weight:600;text-transform:uppercase;">High Severity</div>
+        <div style="font-size:2rem;font-weight:800;color:#9333ea;">3</div>
+        <div style="font-size:.82rem;color:var(--muted);">E-01, E-02, E-03 critical</div>
+      </div>
+    </div>
+  </div>
+</section>
+<div class="divider"></div>
+
+<!-- ══ SECTION 2 — DEBUGGING ══ -->
+<section id="debugging" class="section-alt" style="padding:3rem 0;">
+  <div class="container">
+    <div class="section-title">
+      <div class="icon">🔍</div>
+      <div>
+        <h2>Section 2 — Debugging Strategy &amp; Framework</h2>
+        <p>Systematic approach: logging, monitoring, reproduction, retry logic, and exception handling</p>
+      </div>
+    </div>
+
+    <div class="grid-2" style="margin-bottom:1.4rem;">
+
+      <!-- Logging -->
+      <div class="card">
+        <h3 style="font-size:1rem;font-weight:700;color:var(--primary);margin-bottom:.8rem;">📋 Logging Strategy</h3>
+        <div class="timeline">
+          <div class="tl-item">
+            <div class="tl-dot"></div>
+            <div class="tl-title">Structured Log Levels</div>
+            <div class="tl-desc">INFO for normal flow milestones, WARN for recoverable anomalies, ERROR for exceptions with stack traces, FATAL for process-terminating failures.</div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-dot gold"></div>
+            <div class="tl-title">Contextual Data in Every Log</div>
+            <div class="tl-desc">Always include: OrderID, BotInstanceID, Timestamp (UTC), WorkflowStage, CorrelationID for end-to-end tracing across microservices.</div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-dot green"></div>
+            <div class="tl-title">UiPath Orchestrator Log Shipping</div>
+            <div class="tl-desc">All logs piped to Orchestrator → Elasticsearch → Kibana dashboard. Log retention 90 days for audit compliance.</div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-dot red"></div>
+            <div class="tl-title">Screenshot on Exception</div>
+            <div class="tl-desc">Take Screenshot activity triggered in every Catch block, saved to shared drive with OrderID-Timestamp naming convention.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Monitoring -->
+      <div class="card">
+        <h3 style="font-size:1rem;font-weight:700;color:var(--primary);margin-bottom:.8rem;">📊 Monitoring &amp; Alerting</h3>
+        <div class="timeline">
+          <div class="tl-item">
+            <div class="tl-dot"></div>
+            <div class="tl-title">Real-Time KPI Tracking</div>
+            <div class="tl-desc">Orchestrator custom dashboards track: success rate, exception rate, avg processing time, queue depth — refreshed every 60 seconds.</div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-dot gold"></div>
+            <div class="tl-title">Threshold-Based Alerts</div>
+            <div class="tl-desc">PagerDuty alerts triggered when: success rate &lt;90%, error rate &gt;5%, queue depth &gt;500 items, or bot is unresponsive &gt;5 min.</div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-dot green"></div>
+            <div class="tl-title">SLA Violation Detection</div>
+            <div class="tl-desc">Orders not processed within 4 hours flagged automatically. Email notification sent to Operations Manager with order list.</div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-dot red"></div>
+            <div class="tl-title">Anomaly Detection</div>
+            <div class="tl-desc">Unusual spikes in specific error types trigger automated Jira tickets with log snippets attached for developer review.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Reproduction -->
+      <div class="card">
+        <h3 style="font-size:1rem;font-weight:700;color:var(--primary);margin-bottom:.8rem;">🔁 Error Reproduction Steps</h3>
+        <ol style="font-size:.85rem;padding-left:1.2rem;display:flex;flex-direction:column;gap:.6rem;">
+          <li><strong>Isolate</strong> — Extract the failing transaction from Orchestrator queue with its exact input payload.</li>
+          <li><strong>Snapshot</strong> — Clone the production environment state (app version, DB snapshot, selector library version).</li>
+          <li><strong>Replay</strong> — Run the bot in Debug mode against the isolated transaction in the test environment.</li>
+          <li><strong>Observe</strong> — Use UiPath's Step Into / Step Over to walk through each activity and inspect variable values in Watch panel.</li>
+          <li><strong>Confirm</strong> — Reproduce the error consistently at least 3× before applying any fix to avoid false positives.</li>
+          <li><strong>Validate Fix</strong> — Run 50 representative test transactions after fix; zero new failures = approved for production deployment.</li>
+        </ol>
+      </div>
+
+      <!-- Retry Logic -->
+      <div class="card">
+        <h3 style="font-size:1rem;font-weight:700;color:var(--primary);margin-bottom:.8rem;">🔄 Retry Logic &amp; Try-Catch</h3>
+        <div class="code-block">
+<span class="c">// Retry Scope Configuration (UiPath)</span>
+<span class="k">RetryScope</span> {
+  NumberOfRetries: <span class="v">3</span>
+  RetryInterval:   <span class="v">00:00:05</span>  <span class="c">// 5-second backoff</span>
+
+  <span class="k">Try</span>:
+    CheckIdempotencyKey(OrderID)
+    <span class="k">If</span> !AlreadyProcessed → PlaceOrder()
+    LogInfo(<span class="s">"Order {OrderID} submitted"</span>)
+
+  <span class="k">Catch</span> SelectorNotFoundException:
+    RefreshSelectorLibrary()
+    SendAlert(<span class="s">"Selector stale — E-01"</span>)
+    Rethrow()
+
+  <span class="k">Catch</span> InvalidOrderDataException:
+    MoveToExceptionQueue(OrderID)
+    LogWarn(<span class="s">"Bad data — E-02"</span>)
+
+  <span class="k">Catch</span> TimeoutException:
+    Wait(<span class="v">10s</span>) → Retry
+    <span class="k">If</span> retries exhausted → EscalateToHuman()
+
+  <span class="k">Finally</span>:
+    TakeScreenshot()
+    CloseApplications()
+}
+        </div>
+      </div>
+    </div>
+
+    <!-- Step-by-step Decision Flow -->
+    <div class="card">
+      <h3 style="font-size:1rem;font-weight:700;color:var(--primary);margin-bottom:1rem;">🗺️ Debugging Decision Flow — Step-by-Step Process</h3>
+      <div class="flow" style="gap:.5rem;row-gap:.6rem;">
+        <div class="flow-step" style="background:#7f1d1d;">Error Detected</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step" style="background:#1e3a8a;">Log Captured</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step" style="background:#065f46;">Alert Triggered</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step" style="background:#4c1d95;">Classify Type</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step" style="background:#713f12;">Reproduce in DEV</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step" style="background:#134e4a;">Apply Fix</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step" style="background:#1e3a8a;">Test 50 Orders</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step" style="background:#065f46;">Deploy to PROD</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step" style="background:#14532d;">Monitor 24hr</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step" style="background:#1e40af;">Close Incident</div>
+      </div>
+      <div style="margin-top:1rem;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.8rem;">
+        <div style="background:#fff5f5;border-radius:8px;padding:.8rem;font-size:.8rem;border-left:3px solid var(--red);">
+          <strong>System Exception Path</strong><br>Auto-retry 3× → If persistent, pause bot → Notify DevOps → Hotfix selector/infra
+        </div>
+        <div style="background:#fffbeb;border-radius:8px;padding:.8rem;font-size:.8rem;border-left:3px solid var(--gold);">
+          <strong>Business Exception Path</strong><br>Move to Exception Queue → Human review within 2hr → Reprocess with corrected data
+        </div>
+        <div style="background:#eff6ff;border-radius:8px;padding:.8rem;font-size:.8rem;border-left:3px solid var(--accent);">
+          <strong>Application Exception Path</strong><br>Enable OCR fallback → Reroute to alternate parser → Log for vendor notification
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<div class="divider"></div>
+
+<!-- ══ SECTION 3 — OPTIMIZATION ══ -->
+<section id="optimization" style="padding:3rem 0;">
+  <div class="container">
+    <div class="section-title">
+      <div class="icon">⚡</div>
+      <div>
+        <h2>Section 3 — Bot Optimization Strategies</h2>
+        <p>Performance, reliability, maintainability improvements with before/after comparison</p>
+      </div>
+    </div>
+
+    <div class="grid-2" style="margin-bottom:1.4rem;">
+      <div class="opt-card opt-perf">
+        <h3>⚡ Performance Improvements</h3>
+        <ul>
+          <li>Parallel processing: split order queue into 5 concurrent bot lanes using Work Queues</li>
+          <li>Database query optimization: add composite index on <code>(product_sku, warehouse_id)</code> — reduces E-03 timeout from 30s to &lt;200ms</li>
+          <li>Lazy UI loading: use WaitForReady=Complete only on critical elements, reducing avg wait time by 40%</li>
+          <li>Batch API calls: group inventory checks into batches of 50 instead of individual requests</li>
+          <li>Connection pooling: reuse DB connections across transactions instead of open/close per order</li>
+        </ul>
+      </div>
+      <div class="opt-card opt-rel">
+        <h3>🛡️ Reliability Improvements</h3>
+        <ul>
+          <li>Idempotency keys: generate UUID per order to prevent duplicate submissions (fixes E-04)</li>
+          <li>Dynamic selector strategy: use anchor-based selectors + fuzzy matching to survive UI updates (fixes E-01)</li>
+          <li>Input schema validation: strict JSON schema validation on ERP feed before bot processes any order (fixes E-02)</li>
+          <li>Circuit breaker pattern: if DB error rate &gt;10% in 60s, pause bot and alert — prevents cascading failures</li>
+          <li>Heartbeat monitoring: 30-second ping to Orchestrator ensures rapid detection of bot crashes</li>
+        </ul>
+      </div>
+      <div class="opt-card opt-main">
+        <h3>🔧 Maintainability Improvements</h3>
+        <ul>
+          <li>Selector library centralization: all UI selectors stored in config asset in Orchestrator — single update point</li>
+          <li>Modular workflow design: each workflow stage is an independent .xaml with defined inputs/outputs</li>
+          <li>Configuration-driven: batch sizes, timeouts, retry counts stored in Orchestrator assets — no code changes needed</li>
+          <li>OCR pipeline upgrade: pre-processing layer auto-detects scanned PDFs and routes to Tesseract OCR (fixes E-05)</li>
+          <li>Code review checklist: all bot changes require peer review + automated regression test suite run</li>
+        </ul>
+      </div>
+      <div class="opt-card opt-sched">
+        <h3>🗓️ Scheduling Strategy</h3>
+        <ul>
+          <li><strong>Peak hours (8AM–6PM):</strong> 5 bot instances running in parallel — maximum throughput</li>
+          <li><strong>Off-peak (6PM–8AM):</strong> 2 bot instances — process backlog, lower resource cost</li>
+          <li><strong>Maintenance window:</strong> 2AM–4AM daily — selector library updates, DB index rebuilds, version deployments</li>
+          <li><strong>Priority queue:</strong> VIP/same-day orders jump queue, processed within 15 minutes guaranteed</li>
+          <li><strong>Weekend schedule:</strong> Reduced to 3 instances; automatic scale-up triggered if queue &gt;200 items</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Before / After Comparison -->
+    <div class="card">
+      <h3 style="font-size:1rem;font-weight:700;color:var(--primary);margin-bottom:1rem;">📊 Before vs. After Optimization Comparison</h3>
+      <div class="compare">
+        <div class="compare-col compare-before">
+          <h3 style="color:var(--red);">❌ Before Optimization</h3>
+          <ul>
+            <li>Success rate: 71% — 29% orders failed or required manual intervention</li>
+            <li>Avg order processing time: 4.2 minutes per order</li>
+            <li>Duplicate orders: ~12 incidents/week causing double billing</li>
+            <li>DB timeout failures: 80+ per peak hour, bot stalls 30s each</li>
+            <li>Manual workarounds: 3.5 hours/day for invoice re-generation</li>
+            <li>Selector failures after every frontend deploy (E-01)</li>
+            <li>No idempotency → duplicate charges reaching customers</li>
+            <li>Single-threaded: 120 orders/hour maximum throughput</li>
+            <li>Config changes require code deployment</li>
+          </ul>
+        </div>
+        <div class="compare-col compare-after">
+          <h3 style="color:var(--green);">✅ After Optimization</h3>
+          <ul>
+            <li>Success rate: 97.4% — sustained over 30-day post-deployment period</li>
+            <li>Avg order processing time: 1.8 minutes per order (57% faster)</li>
+            <li>Duplicate orders: 0 incidents — idempotency keys fully prevent duplicates</li>
+            <li>DB timeouts: eliminated by composite index — all queries &lt;200ms</li>
+            <li>Manual workarounds: 12 minutes/day (96% reduction)</li>
+            <li>Selector library survives UI updates — dynamic anchor strategy</li>
+            <li>Zero duplicate charges in 30 days post-deployment</li>
+            <li>Parallel 5-bot processing: 600 orders/hour throughput (5× increase)</li>
+            <li>Config-driven: zero-downtime parameter updates via Orchestrator</li>
+          </ul>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1rem;margin-top:1.2rem;">
+        <div style="text-align:center;padding:1rem;background:var(--bg);border-radius:10px;">
+          <div style="font-size:1.8rem;font-weight:800;color:var(--green);">↑26%</div>
+          <div style="font-size:.78rem;color:var(--muted);font-weight:600;">Success Rate Gain</div>
+        </div>
+        <div style="text-align:center;padding:1rem;background:var(--bg);border-radius:10px;">
+          <div style="font-size:1.8rem;font-weight:800;color:var(--accent);">5×</div>
+          <div style="font-size:.78rem;color:var(--muted);font-weight:600;">Throughput Increase</div>
+        </div>
+        <div style="text-align:center;padding:1rem;background:var(--bg);border-radius:10px;">
+          <div style="font-size:1.8rem;font-weight:800;color:var(--orange);">57%</div>
+          <div style="font-size:.78rem;color:var(--muted);font-weight:600;">Faster Processing</div>
+        </div>
+        <div style="text-align:center;padding:1rem;background:var(--bg);border-radius:10px;">
+          <div style="font-size:1.8rem;font-weight:800;color:#9333ea;">96%</div>
+          <div style="font-size:.78rem;color:var(--muted);font-weight:600;">Manual Work Reduced</div>
+        </div>
+        <div style="text-align:center;padding:1rem;background:var(--bg);border-radius:10px;">
+          <div style="font-size:1.8rem;font-weight:800;color:var(--red);">0</div>
+          <div style="font-size:.78rem;color:var(--muted);font-weight:600;">Duplicate Orders/Month</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<div class="divider"></div>
+
+<!-- ══ SECTION 4 — DASHBOARD ══ -->
+<section id="dashboard" class="section-alt" style="padding:3rem 0;">
+  <div class="container">
+    <div class="section-title">
+      <div class="icon">📊</div>
+      <div>
+        <h2>Section 4 — Monitoring Dashboard Mock UI</h2>
+        <p>Real-time KPIs, queue health, alerts, and bot performance metrics</p>
+      </div>
+    </div>
+
+    <!-- Top status bar -->
+    <div style="background:var(--primary);color:#fff;border-radius:12px;padding:.8rem 1.4rem;margin-bottom:1.4rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem;font-size:.82rem;">
+      <div>🤖 <strong>UiPath Orchestrator</strong> — Production Environment</div>
+      <div style="display:flex;gap:1.2rem;flex-wrap:wrap;">
+        <span style="color:#a7f3d0;">● 5 Bots Running</span>
+        <span style="color:#fbbf24;">● Queue: 47 items</span>
+        <span style="color:#93c5fd;">● Last sync: 12s ago</span>
+        <span style="color:#e2e8f0;">📅 April 12, 2026 — 09:41 AM</span>
+      </div>
+    </div>
+
+    <!-- KPI Row 1 -->
+    <div class="grid-3" style="margin-bottom:1.2rem;">
+      <div class="kpi blue">
+        <div class="kpi-label">Total Orders Today</div>
+        <div class="kpi-value">4,827</div>
+        <div class="kpi-sub">Since 12:00 AM</div>
+        <div class="kpi-trend trend-up">▲ 12% vs yesterday</div>
+      </div>
+      <div class="kpi green">
+        <div class="kpi-label">Success Rate</div>
+        <div class="kpi-value">97.4%</div>
+        <div class="kpi-sub">4,702 successful</div>
+        <div class="kpi-trend trend-up">▲ 0.3% from last week</div>
+      </div>
+      <div class="kpi red">
+        <div class="kpi-label">Failed Orders</div>
+        <div class="kpi-value">125</div>
+        <div class="kpi-sub">2.6% failure rate</div>
+        <div class="kpi-trend trend-up">▼ 43% vs pre-optimization</div>
+      </div>
+      <div class="kpi orange">
+        <div class="kpi-label">Retries Executed</div>
+        <div class="kpi-value">218</div>
+        <div class="kpi-sub">4.5% of total</div>
+        <div class="kpi-trend trend-up">▼ 60% improvement</div>
+      </div>
+      <div class="kpi teal">
+        <div class="kpi-label">Avg Processing Time</div>
+        <div class="kpi-value">1.8<span style="font-size:1.1rem;">min</span></div>
+        <div class="kpi-sub">Per order</div>
+        <div class="kpi-trend trend-up">▼ 57% faster</div>
+      </div>
+      <div class="kpi purple">
+        <div class="kpi-label">Bot Uptime</div>
+        <div class="kpi-value">99.2%</div>
+        <div class="kpi-sub">Last 30 days</div>
+        <div class="kpi-trend trend-up">▲ Target: 99%</div>
+      </div>
+    </div>
+
+    <div class="grid-2" style="margin-bottom:1.2rem;">
+      <!-- Queue Health -->
+      <div class="card">
+        <h3 style="font-size:.95rem;font-weight:700;color:var(--primary);margin-bottom:1rem;">Queue Health Monitor</h3>
+        <div style="display:flex;flex-direction:column;gap:.9rem;">
+          <div>
+            <div style="display:flex;justify-content:space-between;font-size:.82rem;margin-bottom:.25rem;">
+              <span>🟢 New Orders Queue</span><span style="font-weight:700;color:var(--green);">47 items</span>
+            </div>
+            <div class="prog-bar"><div class="prog-fill" style="width:9%;background:var(--green);"></div></div>
+            <div style="font-size:.75rem;color:var(--muted);">Normal — Est. clearance: 5 min</div>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;font-size:.82rem;margin-bottom:.25rem;">
+              <span>🟡 Exception Queue</span><span style="font-weight:700;color:var(--gold);">23 items</span>
+            </div>
+            <div class="prog-bar"><div class="prog-fill" style="width:23%;background:var(--gold);"></div></div>
+            <div style="font-size:.75rem;color:var(--muted);">Pending human review — SLA: 2hr</div>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;font-size:.82rem;margin-bottom:.25rem;">
+              <span>🔵 VIP Priority Queue</span><span style="font-weight:700;color:var(--accent);">8 items</span>
+            </div>
+            <div class="prog-bar"><div class="prog-fill" style="width:5%;background:var(--accent);"></div></div>
+            <div style="font-size:.75rem;color:var(--muted);">High-priority — SLA: 15 min</div>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;font-size:.82rem;margin-bottom:.25rem;">
+              <span>🔴 Dead Letter Queue</span><span style="font-weight:700;color:var(--red);">5 items</span>
+            </div>
+            <div class="prog-bar"><div class="prog-fill" style="width:2%;background:var(--red);"></div></div>
+            <div style="font-size:.75rem;color:var(--muted);">Manual investigation required</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bot Instance Status -->
+      <div class="card">
+        <h3 style="font-size:.95rem;font-weight:700;color:var(--primary);margin-bottom:1rem;">Bot Instance Status</h3>
+        <div style="display:flex;flex-direction:column;gap:.7rem;">
+          <div style="display:flex;align-items:center;gap:.8rem;padding:.6rem;background:#f0fdf4;border-radius:8px;">
+            <span style="color:var(--green);font-size:1.1rem;">●</span>
+            <div style="flex:1;font-size:.83rem;"><strong>Bot-Instance-01</strong> — Processing Order #482711<br><span style="color:var(--muted);font-size:.78rem;">Runtime: 1m 12s | Stage: Inventory Check</span></div>
+            <span style="font-size:.75rem;font-weight:700;color:var(--green);">RUNNING</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:.8rem;padding:.6rem;background:#f0fdf4;border-radius:8px;">
+            <span style="color:var(--green);font-size:1.1rem;">●</span>
+            <div style="flex:1;font-size:.83rem;"><strong>Bot-Instance-02</strong> — Processing Order #482712<br><span style="color:var(--muted);font-size:.78rem;">Runtime: 0m 45s | Stage: Order Placement</span></div>
+            <span style="font-size:.75rem;font-weight:700;color:var(--green);">RUNNING</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:.8rem;padding:.6rem;background:#f0fdf4;border-radius:8px;">
+            <span style="color:var(--green);font-size:1.1rem;">●</span>
+            <div style="flex:1;font-size:.83rem;"><strong>Bot-Instance-03</strong> — Processing Order #482713<br><span style="color:var(--muted);font-size:.78rem;">Runtime: 2m 01s | Stage: Invoice Generation</span></div>
+            <span style="font-size:.75rem;font-weight:700;color:var(--green);">RUNNING</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:.8rem;padding:.6rem;background:#f0fdf4;border-radius:8px;">
+            <span style="color:var(--green);font-size:1.1rem;">●</span>
+            <div style="flex:1;font-size:.83rem;"><strong>Bot-Instance-04</strong> — Processing Order #482714<br><span style="color:var(--muted);font-size:.78rem;">Runtime: 0m 22s | Stage: Data Extraction</span></div>
+            <span style="font-size:.75rem;font-weight:700;color:var(--green);">RUNNING</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:.8rem;padding:.6rem;background:#fff7ed;border-radius:8px;">
+            <span style="color:var(--gold);font-size:1.1rem;">●</span>
+            <div style="flex:1;font-size:.83rem;"><strong>Bot-Instance-05</strong> — Retry #2 on Order #482698<br><span style="color:var(--muted);font-size:.78rem;">Business Exception — Awaiting queue pickup</span></div>
+            <span style="font-size:.75rem;font-weight:700;color:var(--gold);">RETRY</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Alerts Panel -->
+    <div class="card">
+      <h3 style="font-size:.95rem;font-weight:700;color:var(--primary);margin-bottom:1rem;">🔔 Active Alerts &amp; Notifications</h3>
+      <div class="alert-item alert-ok">
+        <div class="alert-dot dot-green"></div>
+        <div class="alert-text"><strong>✅ System Health — All Clear</strong>All 5 bot instances operational. Success rate 97.4% above 95% SLA threshold. DB response times nominal.</div>
+      </div>
+      <div class="alert-item alert-warn">
+        <div class="alert-dot dot-yellow"></div>
+        <div class="alert-text"><strong>⚠️ Exception Queue Backlog — MEDIUM</strong>23 items pending human review. 7 items approaching 2-hour SLA deadline. Assigned to: ops-team@company.com</div>
+      </div>
+      <div class="alert-item alert-info">
+        <div class="alert-dot dot-blue"></div>
+        <div class="alert-text"><strong>ℹ️ Scheduled Maintenance — Tonight 2:00 AM</strong>Selector library v2.4 deployment and DB index rebuild scheduled. Expected downtime: 45 minutes. Backfill queue prepared.</div>
+      </div>
+      <div class="alert-item alert-crit">
+        <div class="alert-dot dot-red"></div>
+        <div class="alert-text"><strong>🚨 Dead Letter Queue — 5 Unresolvable Orders</strong>Orders #482601, #482603, #482607, #482618, #482624 require manual investigation. Payment gateway returned undocumented error code 9042.</div>
+      </div>
+    </div>
+  </div>
+</section>
+<div class="divider"></div>
+
+<!-- ══ SECTION 5 — AI USAGE ══ -->
+<section id="ai" style="padding:3rem 0;">
+  <div class="container">
+    <div class="section-title">
+      <div class="icon">🤖</div>
+      <div>
+        <h2>Section 5 — AI-Assisted Development: Claude Code &amp; Vibe Coding</h2>
+        <p>How Claude Code and AI-driven "vibe coding" were used to build this solution</p>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:1.4rem;background:linear-gradient(135deg,#eff6ff,#faf5ff);border:1px solid #bfdbfe;">
+      <h3 style="font-size:1.1rem;font-weight:700;color:var(--primary);margin-bottom:.6rem;">What is Vibe Coding?</h3>
+      <p style="font-size:.9rem;color:var(--text);line-height:1.7;">
+        <strong>Vibe coding</strong> is a modern AI-assisted development approach where the developer describes <em>what they want</em> in natural language, and an AI (like Claude Code) generates, refines, and iterates on the actual code. Rather than writing every line manually, the developer acts as an <strong>architect and reviewer</strong> — guiding the AI through high-level intent while the AI handles implementation details. This dramatically accelerates prototyping and academic project development.
+      </p>
+    </div>
+
+    <div class="grid-2">
+      <div class="ai-feature">
+        <h3>💬 Prompt Engineering for Architecture</h3>
+        <p>Claude Code was prompted with the full project requirements in natural language: "Build a single-page professional React website for an E-commerce RPA Bot troubleshooting case study with 5 realistic errors..." The AI structured the entire component architecture, data models, and section layout from this description alone.</p>
+      </div>
+      <div class="ai-feature">
+        <h3>🎨 UI/UX Generation via Natural Language</h3>
+        <p>Design specifications like "enterprise-style, navy and gold color scheme, card-based layout, clean academic feel" were fed as prompts. Claude Code translated these aesthetic descriptions into actual CSS custom properties, grid systems, gradient definitions, and component styles without manual CSS authoring.</p>
+      </div>
+      <div class="ai-feature">
+        <h3>📋 Domain Content Synthesis</h3>
+        <p>RPA-specific error scenarios (SelectorNotFoundException, OracleDBTimeoutException, DuplicateOrderException) and their root causes were generated by prompting Claude with the business domain context. The AI synthesized realistic, technically accurate content by combining RPA platform knowledge with e-commerce workflow patterns.</p>
+      </div>
+      <div class="ai-feature">
+        <h3>🔄 Iterative Refinement Loop</h3>
+        <p>The vibe coding process was iterative: prompt → generate → review → refine. For example, the debugging decision flow was initially a simple list; after prompting "make it visual with a horizontal step flow," Claude Code restructured it into the styled arrow-connected step flow seen in Section 2.</p>
+      </div>
+      <div class="ai-feature">
+        <h3>⚙️ Code Generation &amp; Integration</h3>
+        <p>Claude Code generated the complete HTML/CSS/JS single-file application, the Python scripts for PowerPoint and Word document generation, folder structure creation, and the video script — all from conversational prompts in Claude Code's terminal interface.</p>
+      </div>
+      <div class="ai-feature">
+        <h3>📊 Mock Data &amp; Realistic Scenarios</h3>
+        <p>Dashboard KPI values (97.4% success rate, 4,827 orders, 1.8 min processing time) were generated to be internally consistent and realistic for a mid-scale e-commerce operation. Claude Code ensured the before/after comparison metrics aligned logically with the described optimization improvements.</p>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:1.4rem;background:linear-gradient(135deg,#0f2540,#1e4976);color:#fff;">
+      <h3 style="font-size:1rem;font-weight:700;margin-bottom:.8rem;color:var(--gold);">Key Takeaways — AI in Academic &amp; Professional Projects</h3>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;font-size:.85rem;">
+        <div style="background:rgba(255,255,255,.08);padding:1rem;border-radius:10px;">
+          <div style="font-size:1.4rem;margin-bottom:.4rem;">⚡</div>
+          <strong>10× Speed</strong><br><span style="opacity:.75;">This entire project built in hours rather than weeks using AI-assisted development</span>
+        </div>
+        <div style="background:rgba(255,255,255,.08);padding:1rem;border-radius:10px;">
+          <div style="font-size:1.4rem;margin-bottom:.4rem;">🎯</div>
+          <strong>Domain Accuracy</strong><br><span style="opacity:.75;">AI leverages broad technical knowledge to generate realistic, domain-specific content</span>
+        </div>
+        <div style="background:rgba(255,255,255,.08);padding:1rem;border-radius:10px;">
+          <div style="font-size:1.4rem;margin-bottom:.4rem;">🔁</div>
+          <strong>Rapid Iteration</strong><br><span style="opacity:.75;">Changes that would take hours of manual work apply in seconds via natural language prompts</span>
+        </div>
+        <div style="background:rgba(255,255,255,.08);padding:1rem;border-radius:10px;">
+          <div style="font-size:1.4rem;margin-bottom:.4rem;">👁️</div>
+          <strong>Human Oversight</strong><br><span style="opacity:.75;">Developer remains architect and quality reviewer — AI is the implementation engine</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<div class="divider"></div>
+
+<!-- ══ FOOTER ══ -->
+<footer>
+  <p>Assignment 04 — RPA Course &nbsp;|&nbsp; <strong>Omais Siddiqui</strong> &nbsp;|&nbsp; April 2026</p>
+  <p style="margin-top:.4rem;opacity:.6;">Built using <strong>AI-Assisted Vibe Coding</strong> with Claude Code (Anthropic) · UiPath RPA Platform · E-Commerce Order Processing Case Study</p>
+</footer>
+
+</body>
+</html>
